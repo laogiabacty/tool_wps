@@ -18,7 +18,8 @@ function Download-File($relPath) {
     $dest = Join-Path $scriptPath $relPath
     $destDir = Split-Path $dest -Parent
     if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
-    $url = "$repoBase/$($relPath -replace '\','/')"
+    # Dung .Replace thay -replace de tranh loi regex
+    $url = $repoBase + '/' + $relPath.Replace('\', '/')
     Write-Host "  [+] Dang tai: $relPath..." -ForegroundColor Yellow
     for ($i=1; $i -le 3; $i++) {
         try {

@@ -26,7 +26,8 @@ foreach ($f in $files) {
     $dest = Join-Path $localDir $f
     $destDir = Split-Path $dest -Parent
     if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
-    $url = "$repoBase/$($f -replace '\','/')"
+    # Dung .Replace thay -replace de tranh loi regex
+    $url = "$repoBase/" + $f.Replace('\', '/')
     $ok = $false
     for ($i=1; $i -le 3; $i++) {
         try {
