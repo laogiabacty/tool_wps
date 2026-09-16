@@ -1,0 +1,18 @@
+﻿========================================================
+                 THONG TIN CAU HINH MAY TINH            
+========================================================
+Ngay kiem tra: 15/09/2026 16:30:11
+--------------------------------------------------------
+[1] Ten may: DESKTOP-S8FOQAD
+[2] Loai may: Laptop
+[3] Phien ban Windows: Microsoft Windows 10 Pro (64-bit)
+    - Ngay cai dat Windows: 31/07/2026
+[4] So Serial: PF18MBBS
+[5] CPU: Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz
+[6] Tong dung luong RAM: 8 GB
+[7] Mainboard: LENOVO 20KN005GVA
+[8] Trang thai mang: Workgroup (Khong len Domain)
+[9] Danh sach o cung phat hien tren may:
+   + O 1: Model: THNSN5256GPUK TOSHIBA - Dung luong: 238 GB
+   + O 2: Model: ST1000LM035-1RK172 - Dung luong: 932 GB
+--------------------------------------------------------

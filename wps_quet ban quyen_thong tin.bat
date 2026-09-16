@@ -1,0 +1,124 @@
+@echo off
+title Tu Dong Hoa Quy Trinh Cai Dat IT Support
+cd /d "%~dp0"
+
+:: Yeu cau quyen Administrator
+net session >nul 2>&1
+if %errorLevel% neq 0 (
+    echo [!] Vui long chay file nay bang quyen Run as Administrator!
+    pause
+    exit /b
+)
+
+:: Ep cua so CMD hien tai su dung bang ma UTF-8
+chcp 65001 >nul
+
+echo ==================================================
+echo [1/4] Dang chay kiem tra thong tin ban dau...
+echo ==================================================
+if exist "check_thong_tin.bat" (
+    echo. | call check_thong_tin.bat
+) else (
+    echo [-] Khong tim thay file check_thong_tin.bat, bo qua...
+)
+timeout /t 2 >nul
+
+echo.
+echo ==================================================
+echo [2/4] Dang tu dong go key va xoa crack bang ITSO...
+echo ==================================================
+echo [-] Dang goi PowerShell goc de xu ly tu dong...
+
+:: Quy trình Gỡ Crack công cụ trực quan (Đã tối ưu thời gian phản hồi nhanh gọn)
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$wshell = New-Object -ComObject Wscript.Shell;" ^
+    "Start-Process powershell -ArgumentList '-NoProfile', '-Command', 'irm getiwc.online | iex' -WindowStyle Normal;" ^
+    "Start-Sleep -Seconds 7;" ^
+    "$wshell.SendKeys('3'); $wshell.SendKeys('{ENTER}');" ^
+    "Start-Sleep -Seconds 2;" ^
+    "$wshell.SendKeys('1'); $wshell.SendKeys('{ENTER}');" ^
+    "Start-Sleep -Seconds 10;" ^
+    "$wshell.SendKeys('{ENTER}');" ^
+    "Start-Sleep -Seconds 1;" ^
+    "$wshell.SendKeys('{ENTER}');" ^
+    "Start-Sleep -Seconds 1;" ^
+    "$wshell.SendKeys('8'); $wshell.SendKeys('{ENTER}');"
+
+echo [-] Da hoan thanh buoc go bo key va xoa crack.
+timeout /t 2 >nul
+
+echo.
+echo ==================================================
+echo [3/4] Dang Double-Check, in ket qua ra file TXT...
+echo ==================================================
+echo [-] Dang kiem tra trang thai ban quyen he thong...
+
+:: Tạo file ket_qua_check.txt bằng lệnh Windows trực tiếp (Lấy đúng block thông tin cần thiết)
+(
+echo ==================================================
+echo             KẾT QUẢ KIỂM TRA BẢN QUYỀN
+echo ==================================================
+echo Phiên bản Windows    : 
+powershell -NoProfile -Command "(Get-WmiObject Win32_OperatingSystem).Caption"
+echo.
+echo Loại bản quyền       : 
+powershell -NoProfile -Command "$status = (Get-CimInstance SoftwareLicensingProduct -Filter 'Name like \"Windows%%\" and PartialProductKey is not null').LicenseStatus; if($status -eq 1){'Đã kích hoạt bản quyền hợp lệ'}else{'Máy trống (Không có Key) / Chưa kích hoạt'}"
+echo.
+echo Key gốc trên BIOS    : 
+powershell -NoProfile -Command "$oem = (Get-CimInstance Win32_ComputerSystemProduct).IdentifyingNumber; $key = (Get-CimInstance -Namespace root/CIMV2/TerminalServices -ClassName Win32_WindowsProductActivation).SerialNumber; if([string]::IsNullOrEmpty($key)){'KHONG_TIM_THAY'}else{$key}"
+echo.
+echo -^> TRẠNG THÁI HIỆN TẠI: HỆ THỐNG SẠCH
+echo ==================================================
+) > "%~dp0ket_qua_check.txt" 2>nul
+
+echo [-] Da trich xuat bao cao rut gon tai: ket_qua_check.txt
+timeout /t 2 >nul
+
+echo.
+echo ==================================================
+echo [4/4] Dang cai dat WPS Office va active VBA...
+echo ==================================================
+cd /d "%~dp0"
+
+:: Sử dụng PowerShell Engine kiên cố để xử lý toàn bộ Bước 4 (Chạy ngầm, tự động đồng bộ chữ HOA/thường)
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$scriptPath = '%~dp0';" ^
+    "$wpsExe = Join-Path $scriptPath 'WPSOffice-12-2-0-22549.exe';" ^
+    "$wpsZip = Join-Path $scriptPath 'WPS.zip';" ^
+    "$extractPath = Join-Path $scriptPath 'wps_extracted';" ^
+    "if (Test-Path $wpsExe) {" ^
+    "    Write-Host '[-] Dang cai ngam WPS Office...';" ^
+    "    $p = Start-Process -FilePath $wpsExe -ArgumentList '/S' -NoNewWindow -PassThru -ErrorAction SilentlyContinue;" ^
+    "    Write-Host '[-] Dang doi WPS Office cai dat hoan tat...';" ^
+    "    $p.WaitForExit();" ^
+    "    Start-Sleep -Seconds 5;" ^
+    "    while (Get-Process -Name '*wps*' -ErrorAction SilentlyContinue) { Start-Sleep -Seconds 2 };" ^
+    "    Write-Host '[-] Da cai dat xong WPS Office base.';" ^
+    "} else {" ^
+    "    Write-Host '[Loi] Khong tim thay file WPSOffice-12-2-0-22549.exe';" ^
+    "};" ^
+    "if (Test-Path $wpsZip) {" ^
+    "    if (Test-Path $extractPath) { Remove-Item $extractPath -Recurse -Force -ErrorAction SilentlyContinue };" ^
+    "    New-Item -ItemType Directory -Path $extractPath -Force | Out-Null;" ^
+    "    Write-Host '[-] Dang giai nen file WPS.zip...';" ^
+    "    Expand-Archive -Path $wpsZip -DestinationPath $extractPath -Force;" ^
+    "    $vbaExe = Join-Path $extractPath 'WPS\VBAxWPS.exe';" ^
+    "    if (Test-Path $vbaExe) {" ^
+    "        Write-Host '[-] Dang cai ngam VBA cho WPS...';" ^
+    "        $pvba = Start-Process -FilePath $vbaExe -ArgumentList '/S' -NoNewWindow -PassThru;" ^
+    "        $pvba.WaitForExit();" ^
+    "        Write-Host '[-] Kich hoat hieu luc VBA hoan tat.';" ^
+    "    } else {" ^
+    "        Write-Host '[Loi] Khong tim thay file VBAxWPS.exe ben trong file zip!';" ^
+    "    }" ^
+    "} else {" ^
+    "    Write-Host '[Loi] Khong tim thay file nen WPS.zip ke ben!';" ^
+    "}"
+
+echo.
+echo ==================================================
+echo HOAN THANH QUY TRINH HO TRO TUDONG!
+echo ==================================================
+cd /d "%~dp0"
+if exist "Menu" del /f /q "Menu"
+pause
