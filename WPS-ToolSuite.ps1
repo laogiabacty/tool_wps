@@ -6,15 +6,35 @@
 
 $ErrorActionPreference = 'Stop'
 
-# --- Tu dinh thu muc lam viec ---
-$scriptPath = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
-# Neu chay tu Launcher, PSScriptRoot co the khong dung -> fallback
-if (-not (Test-Path (Join-Path $scriptPath 'WPS-ToolSuite.ps1'))) {
-    $scriptPath = Join-Path $env:USERPROFILE 'Documents\tool_quet_ban_quyen'
-}
+# --- Luon luu file o Documents\tool_quet_ban_quyen ---
+$scriptPath = Join-Path $env:USERPROFILE 'Documents\tool_quet_ban_quyen'
+if (-not (Test-Path $scriptPath)) { New-Item -ItemType Directory -Path $scriptPath -Force | Out-Null }
 Set-Location $scriptPath
 
-# --- Danh sach cong tu anh dan muc do (6 file co muc do) ---
+$repoBase = 'https://raw.githubusercontent.com/laogiabacty/tool_wps/main'
+
+# --- Ham tai file tu GitHub ---
+function Download-File($relPath) {
+    $dest = Join-Path $scriptPath $relPath
+    $destDir = Split-Path $dest -Parent
+    if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
+    $url = "$repoBase/$($relPath -replace '\','/')"
+    Write-Host "  [+] Dang tai: $relPath..." -ForegroundColor Yellow
+    for ($i=1; $i -le 3; $i++) {
+        try {
+            Invoke-WebRequest -Uri $url -OutFile $dest -UseBasicParsing -TimeoutSec 300 -ErrorAction Stop
+            Write-Host "  [+] Tai xong: $relPath" -ForegroundColor Green
+            return $true
+        } catch {
+            Write-Host "  [!] Lan $i that bai: $_" -ForegroundColor Yellow
+            Start-Sleep -Seconds 2
+        }
+    }
+    Write-Host "  [-] THAT BAI: $relPath" -ForegroundColor Red
+    return $false
+}
+
+# --- Danh sach cong cu ---
 $tools = @(
     @{ Name = "check_thong_tin.bat";                File = "check_thong_tin.bat";                Desc = "Kiem tra cau hinh may tinh" },
     @{ Name = "wps_quet_ban_quyen_thong_tin.bat";   File = "wps_quet ban quyen_thong tin.bat"; Desc = "Tu dong hoa quy trinh ho tro WPS" },
@@ -24,7 +44,7 @@ $tools = @(
     @{ Name = "block_WPS/Chay-Block-WPS.bat";       File = "block_WPS\Chay-Block-WPS.bat";     Desc = "Chan ket noi Internet cua WPS" }
 )
 
-# --- Ham ve menu console, khong flicker, khong lap dong ---
+# --- Ham ve menu ---
 function Show-Menu($tools, $selected) {
     Clear-Host
     Write-Host "==================================================" -ForegroundColor DarkCyan
@@ -44,7 +64,7 @@ function Show-Menu($tools, $selected) {
     Write-Host ""
 }
 
-# --- Doc phim Up/Down/Enter/so ---
+# --- Doc phim ---
 function Read-MenuSelection($tools) {
     $selected = 0
     while ($true) {
@@ -65,14 +85,14 @@ function Read-MenuSelection($tools) {
     }
 }
 
-# --- Chay cong cu ---
+# --- Chay cong cu (tu tai file neu thieu) ---
 function Invoke-Tool($t) {
     $full = Join-Path $scriptPath $t.File
     Write-Host ""
     Write-Host "=== CHAY: $($t.File) ===" -ForegroundColor Yellow
     if (-not (Test-Path $full)) {
-        Write-Host "[LOI] Khong tim thay file: $full" -ForegroundColor Red
-        return
+        Write-Host "[!] File chua co, dang tai tu GitHub..." -ForegroundColor Yellow
+        if (-not (Download-File $t.File)) { return }
     }
     try {
         if ($t.File -match '\.ps1$') {
@@ -89,10 +109,7 @@ function Invoke-Tool($t) {
 # --- Main loop ---
 while ($true) {
     $sel = Read-MenuSelection $tools
-    if ($sel -eq -1) {
-        Write-Host "Tam biet." -ForegroundColor DarkGray
-        exit
-    }
+    if ($sel -eq -1) { Write-Host "Tam biet." -ForegroundColor DarkGray; exit }
     Invoke-Tool $tools[$sel]
     Write-Host ""
     Write-Host "Nhan Enter de quay lai menu..." -ForegroundColor DarkGray

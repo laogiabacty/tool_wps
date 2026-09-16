@@ -9,7 +9,7 @@ $localDir = Join-Path $env:USERPROFILE 'Documents\tool_quet_ban_quyen'
 if (-not (Test-Path $localDir)) { New-Item -ItemType Directory -Path $localDir -Force | Out-Null }
 Set-Location $localDir
 
-# --- Tai cac file can thiet ---
+# --- Tai tat ca file can thiet ---
 $files = @(
     'WPS-ToolSuite.ps1',
     'check_thong_tin.bat',
@@ -26,24 +26,22 @@ foreach ($f in $files) {
     $dest = Join-Path $localDir $f
     $destDir = Split-Path $dest -Parent
     if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
-    if (-not (Test-Path $dest)) {
+    $url = "$repoBase/$($f -replace '\','/')"
+    $ok = $false
+    for ($i=1; $i -le 3; $i++) {
         try {
-            Invoke-WebRequest -Uri "$repoBase/$($f -replace '\','/')" -OutFile $dest -UseBasicParsing -ErrorAction SilentlyContinue
-            Write-Host "  [+] Tai: $f" -ForegroundColor DarkGray
-        } catch { Write-Host "  [-] Khong tai: $f" -ForegroundColor DarkGray }
+            Invoke-WebRequest -Uri $url -OutFile $dest -UseBasicParsing -TimeoutSec 300 -ErrorAction Stop
+            $ok = $true
+            Write-Host "  [+] Tai: $f" -ForegroundColor Green
+            break
+        } catch {
+            Write-Host "  [!] Lan $i that bai: $f - $_" -ForegroundColor Yellow
+            Start-Sleep -Seconds 2
+        }
     }
-}
-
-# --- Tai WPS-ToolSuite.ps1 neu chua co ---
-$guiScript = Join-Path $localDir 'WPS-ToolSuite.ps1'
-if (-not (Test-Path $guiScript)) {
-    try {
-        Invoke-WebRequest -Uri "$repoBase/WPS-ToolSuite.ps1" -OutFile $guiScript -UseBasicParsing -ErrorAction Stop
-    } catch {
-        Write-Host "[LOI] Khong tai duoc WPS-ToolSuite.ps1!" -ForegroundColor Red
-        exit 1
-    }
+    if (-not $ok) { Write-Host "  [-] THAT BAI: $f" -ForegroundColor Red }
 }
 
 Write-Host "[Launcher] Dang mo menu..." -ForegroundColor Cyan
+$guiScript = Join-Path $localDir 'WPS-ToolSuite.ps1'
 powershell -NoProfile -ExecutionPolicy Bypass -File $guiScript
